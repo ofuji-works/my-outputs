@@ -19,10 +19,7 @@ Frontend Engineerのofujiです。
 実は今回の記事もその一貫になります。
 
 ### この記事の目的
-
-### この記事の対象者
-
-### この記事の前提条件
+今回の記事では、SWCというJavaScriptのトランスパイラを使ってカスタムプラグインを作成することで、JavaScriptのトランスパイルの仕組みに触れることを目的としています。
 
 ### この記事の構成
 
@@ -37,6 +34,17 @@ Frontend Engineerのofujiです。
 7. 参考文献
 
 ## SWCとは
+
+SWCとは、Rustで書かれたJavaScript/TypeScriptのトランスパイラです。
+同等の機能を持つBabelと比較して、高速であることが特徴です。
+(シングルスレッド上でBabelの20倍早いとかなんとか)
+
+https://swc.rs/
+
+身近なところでは、Next.jsでよく話題になったりしますよね。
+https://nextjs.org/docs/architecture/nextjs-compiler
+
+主に機能としては、CompilationやMinification、Bundling等があります。
 
 ## JavaScriptのトランスパイルについて
 
