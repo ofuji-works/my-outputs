@@ -11,14 +11,17 @@ publication_name: "sun_asterisk"
 
 ### 自己紹介
 
-Frontend Engineerのofujiです。
+Sun*のFrontend Developerのおふじです。
 業務ではリードエンジニアとして、開発を行っています。
 最近では主にReactとTypeScriptを使ったWebアプリケーションの開発を行うことが多いです。
 
 個人では、Rustが好きで簡単なアプリケーションを作るなりして楽しんでいます。
-実は今回の記事もその一貫になります。
+実は今回の記事もその一環になります。
 
 ### この記事の目的
+
+本記事は、[Sun* Advent Calendar2023](https://adventar.org/calendars/9043)の19日目の記事となります。
+
 今回の記事では、SWCというJavaScriptのトランスパイラを使ってカスタムプラグインを作成することで、JavaScriptのトランスパイルの仕組みに触れることを目的としています。
 
 ### この記事の構成
@@ -37,11 +40,14 @@ Frontend Engineerのofujiです。
 
 SWCとは、Rustで書かれたJavaScript/TypeScriptのトランスパイラです。
 同等の機能を持つBabelと比較して、高速であることが特徴です。
+
+> SWC is 20x faster than Babel on a single thread and 70x faster on four cores.
+
 (シングルスレッド上でBabelの20倍早いとかなんとか)
 
 https://swc.rs/
 
-身近なところでは、Next.jsでよく話題になったりしますよね。
+身近なところでは、Next.jsのコンパイラとして採用されています。
 https://nextjs.org/docs/architecture/nextjs-compiler
 
 主に機能としては、CompilationやMinification、Bundling等があります。
@@ -49,7 +55,7 @@ https://nextjs.org/docs/architecture/nextjs-compiler
 ## JavaScriptのトランスパイルについて
 
 普段私たちが利用しているTypeScriptやJSXはJavaScriptのエンジンでそのまま実行はできません。
-なので実行できる形に（つまりJavaScriptにトランスパイル）してあげる必要があります。
+なので実行できる形に（つまりJavaScriptに変換）してあげる必要があります。
 
 :::message
 トランスパイル(トランスコンパイル)とは
@@ -234,7 +240,7 @@ JavaScript ASTにはBabel/Babylon(Acorn系)やEsprima系等複数の種類が存
 https://play.swc.rs/
 
 さて少し話がそれましたが、まだ説明できていないNodeがありますね。
-上述したProgram他にもStatementやExpression、Declarations、Identifier、Literal等様々なNodeが存在します。
+上述したProgramの他にもStatementやExpression、Declarations、Identifier、Literal等様々なNodeが存在します。
 
 大体ここにまとまっていますので、こちらも興味があれば見てみてください。
 https://github.com/estree/estree/blob/master/es5.md
@@ -277,7 +283,7 @@ https://astexplorer.net/
 
 ## SWCのカスタムプラグインを作成してみる
 
-今回は、console,logやconsole.debug等のconsole系の関数を削除するプラグインを作成してみます。
+今回は、`console.log`や`console.debug`等のconsole系の関数を削除するプラグインを作成してみます。
 
 ### 事前準備
 こちらの記事を参考に環境を整えていきます。
@@ -293,10 +299,14 @@ rust 1.72.0
 1. まずは、SWCのクライアントツールをインストールします。
 
 ```shell
-cargo install swc-cli
+cargo install swc_cli
 ```
 
 2. 続いてplugin用のプロジェクトを作成します。
+
+:::message
+もしまだローカルにインストールされていない方は、ビルドターゲットとしてwasm32-wasiをインストールしておいてください。
+:::
 
 ```shell
 swc plugin new --target-type wasm32-wasi my-first-plugin
@@ -530,7 +540,7 @@ function hoge () {
 }
 ```
 
-上記のASTを見たところ、stmtsに`console.log`のExpressionStatementが格納されていそうです。
+上記のASTを見たところ、stmtsに`console.log`のExpressionStatementが格納されています。
 これで、手を加えるべきNodeがわかりました。
 
 次はどのように`console.log`を削除するかを見ていきます。
@@ -586,12 +596,12 @@ impl VisitMut for TransformVisitor {
 まず、`Take`トレイトを利用するために`use swc_core::common::util::take::Take;`を追加しています。
 こちらはtakeメソッドを利用するために必要になります。
 
-次に、`visit_mut_stmt`を実装しています。
+次に、`visit_mut_stmt`を実装していきます。
 抽象化されたNodeがenumで定義されているので、matchでパターンマッチを行い、対象のNodeを判定するようにしています。
 `console`を判定できるところまで来たら、`s.take()`でNodeを無効化します。
 こちらでこのメソッドは完了です。
 
-次に、`visit_mut_stmts`を実装しています。
+次に、`visit_mut_stmts`を実装していきます。
 こちらは簡単です。先ほど無効化したStmtを`retain`メソッドを利用して削除します。
 今回Stmtは`Stmt::Empty`になっているので、`!s.is_empty()`でemptyでないNodeを残すようにしています。
 
@@ -701,7 +711,7 @@ cargo build --release --target wasm32-wasi
 次に検証するためのプロジェクトを作成します。
 今回は同じディレクトリにexampleという名前で作成しました。
 
-作成したプロジェクトの中で`npm init`を実行し、package.jsonを作成し下記コマンドを実行しましょう。
+作成したディレクトリの中で`npm init`を実行し、package.jsonを作成し下記コマンドを実行しましょう。
 
 ```shell
 npm install @swc/cli @swc/core
