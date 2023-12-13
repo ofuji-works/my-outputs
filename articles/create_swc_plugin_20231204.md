@@ -7,6 +7,10 @@ published: false
 publication_name: "sun_asterisk"
 ---
 
+:::message
+本記事は、[Sun* Advent Calendar2023](https://adventar.org/calendars/9043)の19日目の記事となります。
+:::
+
 ## はじめに
 
 ### 自己紹介
@@ -19,8 +23,6 @@ Sun*のFrontend Developerのおふじです。
 実は今回の記事もその一環になります。
 
 ### この記事の目的
-
-本記事は、[Sun* Advent Calendar2023](https://adventar.org/calendars/9043)の19日目の記事となります。
 
 今回の記事では、SWCというJavaScriptのトランスパイラを使ってカスタムプラグインを作成することで、JavaScriptのトランスパイルの仕組みに触れることを目的としています。
 
@@ -380,165 +382,7 @@ https://rustdoc.swc.rs/swc_ecma_visit/trait.VisitMut.html
 下記ツールを利用します。
 https://play.swc.rs/
 
-**Input**
-```JavaScript
-function hoge () {
-    const huga = 'huga';
-    console.log(huga);
-}
-```
-
-**Output**
-```json
-{
-  "type": "Module",
-  "span": {
-    "start": 0,
-    "end": 68,
-    "ctxt": 0
-  },
-  "body": [
-    {
-      "type": "FunctionDeclaration",
-      "identifier": {
-        "type": "Identifier",
-        "span": {
-          "start": 9,
-          "end": 13,
-          "ctxt": 2
-        },
-        "value": "hoge",
-        "optional": false
-      },
-      "declare": false,
-      "params": [],
-      "decorators": [],
-      "span": {
-        "start": 0,
-        "end": 68,
-        "ctxt": 3
-      },
-      "body": {
-        "type": "BlockStatement",
-        "span": {
-          "start": 17,
-          "end": 68,
-          "ctxt": 3
-        },
-        "stmts": [
-          {
-            "type": "VariableDeclaration",
-            "span": {
-              "start": 23,
-              "end": 43,
-              "ctxt": 0
-            },
-            "kind": "const",
-            "declare": false,
-            "declarations": [
-              {
-                "type": "VariableDeclarator",
-                "span": {
-                  "start": 29,
-                  "end": 42,
-                  "ctxt": 0
-                },
-                "id": {
-                  "type": "Identifier",
-                  "span": {
-                    "start": 29,
-                    "end": 33,
-                    "ctxt": 3
-                  },
-                  "value": "huga",
-                  "optional": false,
-                  "typeAnnotation": null
-                },
-                "init": {
-                  "type": "StringLiteral",
-                  "span": {
-                    "start": 36,
-                    "end": 42,
-                    "ctxt": 0
-                  },
-                  "value": "huga",
-                  "raw": "'huga'"
-                },
-                "definite": false
-              }
-            ]
-          },
-          {
-            "type": "ExpressionStatement",
-            "span": {
-              "start": 48,
-              "end": 66,
-              "ctxt": 0
-            },
-            "expression": {
-              "type": "CallExpression",
-              "span": {
-                "start": 48,
-                "end": 65,
-                "ctxt": 0
-              },
-              "callee": {
-                "type": "MemberExpression",
-                "span": {
-                  "start": 48,
-                  "end": 59,
-                  "ctxt": 0
-                },
-                "object": {
-                  "type": "Identifier",
-                  "span": {
-                    "start": 48,
-                    "end": 55,
-                    "ctxt": 1
-                  },
-                  "value": "console",
-                  "optional": false
-                },
-                "property": {
-                  "type": "Identifier",
-                  "span": {
-                    "start": 56,
-                    "end": 59,
-                    "ctxt": 0
-                  },
-                  "value": "log",
-                  "optional": false
-                }
-              },
-              "arguments": [
-                {
-                  "spread": null,
-                  "expression": {
-                    "type": "Identifier",
-                    "span": {
-                      "start": 60,
-                      "end": 64,
-                      "ctxt": 3
-                    },
-                    "value": "huga",
-                    "optional": false
-                  }
-                }
-              ],
-              "typeArguments": null
-            }
-          }
-        ]
-      },
-      "generator": false,
-      "async": false,
-      "typeParameters": null,
-      "returnType": null
-    }
-  ],
-  "interpreter": null
-}
-```
+![](/images/create_swc_plugin_20231204/js-to-ast.png)
 
 上記のASTを見たところ、stmtsに`console.log`のExpressionStatementが格納されています。
 これで、手を加えるべきNodeがわかりました。
@@ -643,54 +487,7 @@ function hoge () {
 ```shell
 UPDATE=1 cargo test -- --nocapture
 ```
-
-```shell
-    Finished test [unoptimized + debuginfo] target(s) in 0.23s
-     Running unittests src/lib.rs (target/debug/deps/my_first_plugin-49328c4af207f17c)
-
-running 1 test
-   INFO  Diagnostics will be printed to stderr as logging level is trace or debug
-    at /Users/ami/.local/share/rtx/installs/rust/1.72.0/registry/src/index.crates.io-6f17d22bba15001f/testing-0.35.14/src/errors/stderr.rs:17
-
------ Expected -----
-function hoge() {
-    const huga = 'huga';
-}
-
-   INFO  Diagnostics will be printed to stderr as logging level is trace or debug
-    at /Users/ami/.local/share/rtx/installs/rust/1.72.0/registry/src/index.crates.io-6f17d22bba15001f/testing-0.35.14/src/errors/stderr.rs:17
-
------ Input -----
-
-function hoge () {
-    const huga = 'huga';
-    console.log(huga);
-}
-
------ Actual -----
-Visiting exprstmt: ExprStmt { span: Span { lo: BytePos(50), hi: BytePos(68), ctxt: #0 }, expr: Call(CallExpr { span: Span { lo: BytePos(50), hi: BytePos(67), ctxt: #0 }, callee: Expr(Member(MemberExpr { span: Span { lo: BytePos(50), hi: BytePos(61), ctxt: #0 }, obj: Ident(Ident { span: Span { lo: BytePos(50), hi: BytePos(57), ctxt: #0 }, sym: "console", optional: false }), prop: Ident(Ident { span: Span { lo: BytePos(58), hi: BytePos(61), ctxt: #0 }, sym: "log", optional: false }) })), args: [ExprOrSpread { spread: None, expr: Ident(Ident { span: Span { lo: BytePos(62), hi: BytePos(66), ctxt: #0 }, sym: "huga", optional: false }) }], type_args: None }) }
-
-  DEBUG  Renaming `hoge#0` to `hoge`
-    at /Users/ami/.local/share/rtx/installs/rust/1.72.0/registry/src/index.crates.io-6f17d22bba15001f/swc_ecma_transforms_base-0.134.55/src/rename/analyzer/scope.rs:188
-
-  DEBUG  Renaming `huga#0` to `huga`
-    at /Users/ami/.local/share/rtx/installs/rust/1.72.0/registry/src/index.crates.io-6f17d22bba15001f/swc_ecma_transforms_base-0.134.55/src/rename/analyzer/scope.rs:188
-
-function hoge() {
-    const huga = 'huga';
-}
-
-test example ... ok
-
-test result: ok. 1 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.07s
-
-   Doc-tests my-first-plugin
-
-running 0 tests
-
-test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
-
-```
+![](/images/create_swc_plugin_20231204/cargo-test-stdout.png)
 
 無事テストが通りました。
 出力結果からも、`console.log`が削除されていることが確認できますね。
